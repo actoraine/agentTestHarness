@@ -1,0 +1,14 @@
+[
+  {
+    "input": "Summarize BNY in one sentence.",
+    "expected": "BNY is a global financial services company focused on investment management and investment services."
+  },
+  {
+    "input": "Write a polite greeting for a customer support chat.",
+    "expected": "Hello, thank you for contacting support. How can I help you today?"
+  },
+  {
+    "input": "Return three bullet points for secure API design.",
+    "expected": "Use strong auth, validate all inputs, and enforce rate limiting."
+  }
+]

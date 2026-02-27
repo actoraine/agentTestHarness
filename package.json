@@ -1,0 +1,15 @@
+{
+  "name": "agent-test-harness",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Node.js web harness for AI agent testing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test:harness": "node --test tests/run-tests.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
