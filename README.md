@@ -25,6 +25,7 @@ Local Node.js single-page web app to run prompt tests against an AI agent endpoi
   - Remove Selected (bulk delete selected rows)
 - Status legend.
 - Summary display with overall status + counts (success/failed/ongoing) + average similarity.
+- Typography baseline: table text is 11px (`1rem`), and the rest of the UI scales from that base.
 
 ## Editable grid and loading behavior
 - The `Input` and `Expected Output` columns are editable directly in the table.
@@ -87,6 +88,7 @@ npm run test:harness
 This runs major feature checks from:
 - `tests/run-tests.js`
 - `tests/TEST_CASES.md`
+- Includes a test that validates `sample-input.xls` parsing for upload.
 
 ## macOS startup instructions
 1. Save these files in one folder (project root):
