@@ -1,7 +1,7 @@
 [
   {
-    "input": "Summarize BNY in one sentence.",
-    "expected": "BNY is a global financial services company focused on investment management and investment services."
+    "input": "Summarize this platform in one sentence.",
+    "expected": "This platform runs AI-agent tests with expected outputs, scoring, and exportable results."
   },
   {
     "input": "Write a polite greeting for a customer support chat.",

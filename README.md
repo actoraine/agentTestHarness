@@ -2,6 +2,9 @@
 
 Local Node.js single-page web app to run prompt tests against an AI agent endpoint, compare against expected outputs, and export results.
 
+## Screenshot
+![AI Agent Test Harness Screenshot](docs/screenshot.png)
+
 ## Features
 - Single-page adaptive UI with light/dark mode.
 - Scrollable 8-column test table:
