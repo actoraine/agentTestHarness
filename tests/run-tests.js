@@ -113,6 +113,28 @@ function findFreePort() {
   });
 }
 
+function parseUploadRows(text) {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const parsed = lines.map((line) => {
+    const delimiter = line.includes('\t') ? '\t' : ',';
+    const [input = '', expected = ''] = line.split(delimiter);
+    return { input: input.trim(), expected: expected.trim() };
+  });
+
+  if (!parsed.length) return parsed;
+
+  const first = parsed[0];
+  const isHeader =
+    (first.input.toLowerCase() === 'input' || first.input.toLowerCase() === 'prompt') &&
+    first.expected.toLowerCase() === 'expected output';
+
+  return isHeader ? parsed.slice(1) : parsed;
+}
+
 test('TC-001/002: homepage contains required 8 headers and bottom controls', async () => {
   const appPort = await findFreePort();
   const app = await startServer({ port: appPort });
@@ -123,21 +145,28 @@ test('TC-001/002: homepage contains required 8 headers and bottom controls', asy
     const html = await res.text();
 
     const expectedHeaders = [
+      'Select',
       'Test ID',
       'Input',
       'Expected Output',
       'Actual Output',
       'Status',
       'Similarity %',
-      'Run Time',
-      'Delete'
+      'Run Time'
     ];
 
     for (const header of expectedHeaders) {
       assert.match(html, new RegExp(`<th>${header.replace(/[%]/g, '\\$&')}</th>`));
     }
 
-    const expectedButtons = ['Load Data', 'Start Test', 'Stop Test', 'Compare', 'Save Results'];
+    const expectedButtons = [
+      'Load Tests',
+      'Start Tests',
+      'Stop Ongoing Tests',
+      'Compare All',
+      'Save Results',
+      'Remove Selected'
+    ];
     for (const label of expectedButtons) {
       assert.match(html, new RegExp(`>${label}<`));
     }
@@ -228,4 +257,16 @@ test('TC-007/008/009/010: client code includes major flow hooks', async () => {
   assert.match(appJs, /Previous loaded rows replaced/);
   assert.match(appJs, /function exportToXls\(\)/);
   assert.match(appJs, /\.xls`/);
+});
+
+test('TC-012: sample-input.xls is valid and parseable for upload', async () => {
+  const samplePath = path.resolve(__dirname, '..', 'sample-input.xls');
+  const content = await fs.readFile(samplePath, 'utf8');
+  const rows = parseUploadRows(content);
+
+  assert.ok(rows.length >= 3, 'sample-input.xls should include at least 3 rows');
+  for (const row of rows) {
+    assert.ok(row.input.length > 0, 'each sample row must have input text');
+    assert.ok(row.expected.length > 0, 'each sample row must have expected output text');
+  }
 });

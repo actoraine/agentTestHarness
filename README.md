@@ -8,6 +8,7 @@ Local Node.js single-page web app to run prompt tests against an AI agent endpoi
 ## Features
 - Single-page adaptive UI with light/dark mode.
 - Scrollable 8-column test table:
+  - Select (multi-row)
   - Test ID
   - Input
   - Expected Output
@@ -15,24 +16,25 @@ Local Node.js single-page web app to run prompt tests against an AI agent endpoi
   - Status (N/A, Executing, Completed, Failed) with icon + tooltip
   - Similarity %
   - Run Time
-  - Delete row widget
 - Buttons:
-  - Load Data
-  - Start Test (max 10 parallel calls)
-  - Stop Test (abort in-flight calls)
-  - Compare
-  - Save Results (.xls)
+  - Load Tests
+  - Start Tests (max 10 parallel calls)
+  - Stop Ongoing Tests (abort in-flight calls)
+  - Compare All
+  - Save Results (.xls export)
+  - Remove Selected (bulk delete selected rows)
 - Status legend.
+- Summary display with overall status + counts (success/failed/ongoing) + average similarity.
 
 ## Editable grid and loading behavior
 - The `Input` and `Expected Output` columns are editable directly in the table.
 - A trailing blank manual row is always available for typing a new test.
-- `Load Data` appends loaded tests after manual entries.
+- `Load Tests` appends loaded tests after manual entries.
 - A new file load replaces previously loaded rows from older file loads, while keeping manual entries.
-- Each row has a `Delete` widget to remove that row.
+- Select rows in the first column and click `Remove Selected` for bulk delete.
 
 ## Input file format
-You can load `.json`, `.csv`, or `.txt`:
+You can load `.json`, `.csv`, `.txt`, or `.xls` (CSV-style content):
 
 - JSON: array of objects with `input` and `expected`
 ```json
@@ -47,6 +49,8 @@ You can load `.json`, `.csv`, or `.txt`:
 What is 2+2?,4
 What is capital of France?,Paris
 ```
+
+- XLS (upload sample): use [sample-input.xls](/Users/andrewong/Documents/Codex/sample-input.xls)
 
 ## Integration config
 Set environment variables before starting:
@@ -87,10 +91,14 @@ This runs major feature checks from:
 ## macOS startup instructions
 1. Save these files in one folder (project root):
    - `package.json`
+   - `package-lock.json`
    - `server.js`
    - `public/index.html`
    - `public/styles.css`
    - `public/app.js`
+   - `sample-input.xls`
+   - `tests/TEST_CASES.md`
+   - `tests/run-tests.js`
    - `README.md`
 2. In Terminal, go to the project folder:
 ```bash

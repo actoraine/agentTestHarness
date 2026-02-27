@@ -6,63 +6,72 @@
     <title>AI Agent Test Harness</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="bg-orb orb-a"></div>
-    <div class="bg-orb orb-b"></div>
+    <main class="main-area">
+      <section class="content-card">
+        <header class="top-row">
+          <div>
+            <p class="eyebrow">AI Agent Evaluation</p>
+            <h1>Completed</h1>
+            <p class="subtitle">Manage test prompts, run batches, compare quality, and export results.</p>
+          </div>
 
-    <main class="app-shell">
-      <header class="app-header">
-        <div>
-          <p class="eyebrow">Modern Test Platform</p>
-          <h1>AI Agent Test Harness</h1>
-          <p class="subtitle">Run batch prompt tests, compare outputs, and export results.</p>
-        </div>
-        <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Toggle theme">Toggle theme</button>
-      </header>
+          <div class="header-tools">
+            <div class="pill">Batch: Current</div>
+            <div class="pill">Filter: All</div>
+            <button id="themeToggle" class="icon-btn" type="button" aria-label="Toggle theme">Theme</button>
+          </div>
+        </header>
 
-      <section class="legend" aria-label="Status legend">
-        <span class="legend-item"><span class="dot dot-na"></span> N/A</span>
-        <span class="legend-item"><span class="dot dot-executing"></span> Executing</span>
-        <span class="legend-item"><span class="dot dot-success"></span> Completed</span>
-        <span class="legend-item"><span class="dot dot-failed"></span> Failed</span>
+        <section class="legend" aria-label="Status legend">
+          <span class="legend-item"><span class="dot dot-na"></span> N/A</span>
+          <span class="legend-item"><span class="dot dot-executing"></span> Executing</span>
+          <span class="legend-item"><span class="dot dot-success"></span> Completed</span>
+          <span class="legend-item"><span class="dot dot-failed"></span> Failed</span>
+        </section>
+
+        <section class="table-wrap" aria-label="Test table">
+          <table id="testsTable">
+            <thead>
+              <tr>
+                <th>Select</th>
+                <th>Test ID</th>
+                <th>Input</th>
+                <th>Expected Output</th>
+                <th>Actual Output</th>
+                <th>Status</th>
+                <th>Similarity %</th>
+                <th>Run Time</th>
+              </tr>
+            </thead>
+            <tbody id="testsBody"></tbody>
+          </table>
+        </section>
+
+        <section class="summary-row" aria-label="Execution summary">
+          <span class="summary-chip">Overall: <strong id="overallStatus">Ready</strong></span>
+          <span class="summary-chip">Success: <strong id="successCount">0</strong></span>
+          <span class="summary-chip">Failed: <strong id="failedCount">0</strong></span>
+          <span class="summary-chip">Ongoing: <strong id="ongoingCount">0</strong></span>
+          <span class="summary-chip">Avg Similarity: <strong id="avgSimilarity">0%</strong></span>
+        </section>
+
+        <footer class="controls">
+          <input id="fileInput" type="file" accept=".json,.csv,.txt,.xls" hidden />
+          <button id="loadBtn" class="btn btn-load" type="button">Load Tests</button>
+          <button id="startBtn" class="btn btn-primary" type="button">Start Tests</button>
+          <button id="stopBtn" class="btn btn-danger" type="button">Stop Ongoing Tests</button>
+          <button id="compareBtn" class="btn btn-compare" type="button">Compare All</button>
+          <button id="saveBtn" class="btn btn-save" type="button">Save Results</button>
+          <button id="deleteTestsBtn" class="btn btn-remove" type="button">Remove Selected</button>
+        </footer>
+
+        <p id="statusLine" class="status-line">Ready.</p>
       </section>
-
-      <section class="table-wrap" aria-label="Test table">
-        <table id="testsTable">
-          <thead>
-            <tr>
-              <th>Test ID</th>
-              <th>Input</th>
-              <th>Expected Output</th>
-              <th>Actual Output</th>
-              <th>Status</th>
-              <th>Similarity %</th>
-              <th>Run Time</th>
-              <th>Delete</th>
-            </tr>
-          </thead>
-          <tbody id="testsBody"></tbody>
-        </table>
-      </section>
-
-      <footer class="controls">
-        <input id="fileInput" type="file" accept=".json,.csv,.txt" hidden />
-        <button id="loadBtn" class="btn" type="button">Load Data</button>
-        <button id="startBtn" class="btn btn-primary" type="button">Start Test</button>
-        <button id="stopBtn" class="btn btn-danger" type="button">Stop Test</button>
-        <button id="compareBtn" class="btn" type="button">Compare</button>
-        <button id="saveBtn" class="btn" type="button">Save Results</button>
-      </footer>
-
-      <p id="statusLine" class="status-line">Ready.</p>
     </main>
-
-    <template id="cellTemplate">
-      <div class="truncate" title=""></div>
-    </template>
 
     <script src="/app.js" type="module"></script>
   </body>

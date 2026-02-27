@@ -12,9 +12,15 @@ const els = {
   stopBtn: document.getElementById('stopBtn'),
   compareBtn: document.getElementById('compareBtn'),
   saveBtn: document.getElementById('saveBtn'),
+  deleteTestsBtn: document.getElementById('deleteTestsBtn'),
   testsBody: document.getElementById('testsBody'),
   statusLine: document.getElementById('statusLine'),
-  themeToggle: document.getElementById('themeToggle')
+  themeToggle: document.getElementById('themeToggle'),
+  overallStatus: document.getElementById('overallStatus'),
+  successCount: document.getElementById('successCount'),
+  failedCount: document.getElementById('failedCount'),
+  ongoingCount: document.getElementById('ongoingCount'),
+  avgSimilarity: document.getElementById('avgSimilarity')
 };
 
 const statusInfo = {
@@ -48,8 +54,13 @@ function createEmptyManualRow() {
     status: 'na',
     similarity: null,
     runTime: null,
-    source: 'manual'
+    source: 'manual',
+    selected: false
   };
+}
+
+function hasRowData(test) {
+  return Boolean(test.input.trim() || test.expected.trim() || test.actual.trim());
 }
 
 function ensureTrailingBlankManualRow() {
@@ -120,6 +131,21 @@ function renderTable() {
   for (const test of tests) {
     const tr = document.createElement('tr');
 
+    const selectTd = document.createElement('td');
+    selectTd.className = 'delete-cell';
+    const selectInput = document.createElement('input');
+    selectInput.type = 'checkbox';
+    selectInput.className = 'row-select';
+    selectInput.title = 'Select this row for deletion';
+    selectInput.checked = Boolean(test.selected);
+    selectInput.disabled = isRunning || !hasRowData(test);
+    selectInput.addEventListener('change', (event) => {
+      test.selected = event.target.checked;
+      updateDeleteButtonState();
+    });
+    selectTd.appendChild(selectInput);
+    tr.appendChild(selectTd);
+
     const idTd = document.createElement('td');
     idTd.textContent = String(test.id);
     tr.appendChild(idTd);
@@ -152,43 +178,78 @@ function renderTable() {
     timeTd.textContent = formatTime(test.runTime);
     tr.appendChild(timeTd);
 
-    const deleteTd = document.createElement('td');
-    deleteTd.className = 'delete-cell';
-    const deleteBtn = document.createElement('button');
-    deleteBtn.type = 'button';
-    deleteBtn.className = 'row-delete';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.title = 'Delete this test row';
-    const hasData = test.input.trim() || test.expected.trim() || test.actual.trim();
-    deleteBtn.disabled = isRunning || (!hasData && tests.length === 1);
-    deleteBtn.addEventListener('click', () => {
-      deleteRow(test.id);
-    });
-    deleteTd.appendChild(deleteBtn);
-    tr.appendChild(deleteTd);
-
     els.testsBody.appendChild(tr);
   }
+
+  updateDeleteButtonState();
+  updateSummaryStats();
 }
 
-function deleteRow(testId) {
-  const index = tests.findIndex((t) => t.id === testId);
-  if (index < 0 || isRunning) return;
-  tests.splice(index, 1);
+function updateSummaryStats() {
+  const activeRows = tests.filter((t) => hasRowData(t));
+  const success = activeRows.filter((t) => t.status === 'completed').length;
+  const failed = activeRows.filter((t) => t.status === 'failed').length;
+  const ongoing = activeRows.filter((t) => t.status === 'executing').length;
+  const scores = activeRows.map((t) => t.similarity).filter((v) => Number.isFinite(v));
+  const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+  let overall = 'Ready';
+  if (ongoing > 0 || isRunning) {
+    overall = 'Executing';
+  } else if (stopRequested && activeRows.length > 0) {
+    overall = 'Stopped';
+  } else if (success + failed > 0) {
+    overall = 'Completed';
+  }
+
+  els.overallStatus.textContent = overall;
+  els.successCount.textContent = String(success);
+  els.failedCount.textContent = String(failed);
+  els.ongoingCount.textContent = String(ongoing);
+  els.avgSimilarity.textContent = `${avg}%`;
+}
+
+function updateDeleteButtonState() {
+  if (!els.deleteTestsBtn) return;
+  const selectedCount = tests.filter((t) => t.selected && hasRowData(t)).length;
+  els.deleteTestsBtn.disabled = isRunning || selectedCount === 0;
+}
+
+function deleteSelectedTests() {
+  if (isRunning) return;
+  const selectedCount = tests.filter((t) => t.selected && hasRowData(t)).length;
+  if (!selectedCount) return;
+  const kept = tests.filter((t) => !(t.selected && hasRowData(t)));
+  tests.length = 0;
+  tests.push(...kept.map((t) => ({ ...t, selected: false })));
   ensureTrailingBlankManualRow();
   reindexTests();
   renderTable();
+  setStatusLine(`Deleted ${selectedCount} selected test(s).`);
 }
 
 function parseCsv(text) {
-  return text
+  const rows = text
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [input = '', expected = ''] = line.split(',');
-      return { input: input.trim(), expected: expected.trim() };
-    });
+    .filter(Boolean);
+
+  const parsed = rows.map((line) => {
+    const delimiter = line.includes('\t') ? '\t' : ',';
+    const [input = '', expected = ''] = line.split(delimiter);
+    return { input: input.trim(), expected: expected.trim() };
+  });
+
+  if (!parsed.length) return parsed;
+
+  const first = parsed[0];
+  const firstInput = first.input.toLowerCase();
+  const firstExpected = first.expected.toLowerCase();
+  const looksLikeHeader =
+    (firstInput === 'input' || firstInput === 'prompt' || firstInput === 'text input to the agent') &&
+    (firstExpected === 'expected' || firstExpected === 'expected output');
+
+  return looksLikeHeader ? parsed.slice(1) : parsed;
 }
 
 async function readInputFile(file) {
@@ -198,10 +259,10 @@ async function readInputFile(file) {
     if (!Array.isArray(raw)) throw new Error('JSON must be an array');
     return raw.map((item) => ({ input: item.input || '', expected: item.expected || '' }));
   }
-  if (file.name.endsWith('.csv') || file.name.endsWith('.txt')) {
+  if (file.name.endsWith('.csv') || file.name.endsWith('.txt') || file.name.endsWith('.xls')) {
     return parseCsv(text);
   }
-  throw new Error('Unsupported file type. Use .json, .csv, or .txt');
+  throw new Error('Unsupported file type. Use .json, .csv, .txt, or .xls');
 }
 
 function applyLoadedRows(rows) {
@@ -215,7 +276,8 @@ function applyLoadedRows(rows) {
       status: 'na',
       similarity: null,
       runTime: null,
-      source: 'manual'
+      source: 'manual',
+      selected: false
     });
   });
 
@@ -228,7 +290,8 @@ function applyLoadedRows(rows) {
       status: 'na',
       similarity: null,
       runTime: null,
-      source: 'loaded'
+      source: 'loaded',
+      selected: false
     });
   });
 
@@ -427,6 +490,7 @@ function setButtonsDuringRun(running) {
   els.startBtn.disabled = running;
   els.loadBtn.disabled = running;
   els.compareBtn.disabled = running;
+  els.deleteTestsBtn.disabled = running;
   renderTable();
 }
 
@@ -469,6 +533,7 @@ els.startBtn.addEventListener('click', startTests);
 els.stopBtn.addEventListener('click', stopTests);
 els.compareBtn.addEventListener('click', compareTests);
 els.saveBtn.addEventListener('click', exportToXls);
+els.deleteTestsBtn.addEventListener('click', deleteSelectedTests);
 els.themeToggle.addEventListener('click', toggleTheme);
 
 initTheme();

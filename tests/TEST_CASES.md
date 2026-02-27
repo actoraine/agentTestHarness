@@ -6,7 +6,7 @@
   1. Open `/`.
   2. Inspect table header columns.
 - Expected:
-  - Columns are exactly: `Test ID`, `Input`, `Expected Output`, `Actual Output`, `Status`, `Similarity %`, `Run Time`, `Delete`.
+  - Columns are exactly: `Select`, `Test ID`, `Input`, `Expected Output`, `Actual Output`, `Status`, `Similarity %`, `Run Time`.
 
 ## TC-002: Required bottom controls are present
 - Precondition: app server running.
@@ -14,7 +14,7 @@
   1. Open `/`.
   2. Inspect footer buttons.
 - Expected:
-  - Buttons exist: `Load Data`, `Start Test`, `Stop Test`, `Compare`, `Save Results`.
+  - Buttons exist: `Load Tests`, `Start Tests`, `Stop Ongoing Tests`, `Compare All`, `Save Results`, `Remove Selected`.
 
 ## TC-003: Run API validation when endpoint is missing
 - Precondition: app started without `AGENT_RUN_URL`.
@@ -58,8 +58,8 @@
 
 ## TC-008: Concurrency and stop controls (spec coverage)
 - Steps:
-  1. Load many tests and click `Start Test`.
-  2. Click `Stop Test` during execution.
+  1. Load many tests and click `Start Tests`.
+  2. Click `Stop Ongoing Tests` during execution.
 - Expected:
   - Runs with up to 10 parallel requests.
   - In-flight calls are aborted; statuses update accordingly.
@@ -67,7 +67,7 @@
 ## TC-009: Compare flow writes similarity scores
 - Steps:
   1. Run tests to produce actual outputs.
-  2. Click `Compare`.
+  2. Click `Compare All`.
 - Expected:
   - Calls compare API for completed rows with expected+actual text.
   - Similarity values appear in `Similarity %` column.
@@ -78,3 +78,20 @@
 - Expected:
   - Downloads `.xls` file named `YYYY-MM-DD-HH-MM-SS.xls`.
   - Export contains table headers and row values.
+
+## TC-011: Delete selected rows
+- Steps:
+  1. Select multiple rows in the first `Select` column.
+  2. Click `Remove Selected`.
+- Expected:
+  - All selected rows are removed.
+  - Remaining rows are re-indexed.
+
+## TC-012: Sample upload file validity
+- Steps:
+  1. Use `sample-input.xls`.
+  2. Upload via `Load Tests`.
+- Expected:
+  - File is accepted.
+  - Rows are parsed into `Input` and `Expected Output` columns.
+  - At least 3 sample tests are loaded.
