@@ -270,3 +270,47 @@ test('TC-012: sample-input.xls is valid and parseable for upload', async () => {
     assert.ok(row.expected.length > 0, 'each sample row must have expected output text');
   }
 });
+
+test('TC-013: startServer fails cleanly with invalid port configuration', async () => {
+  const port = await findFreePort();
+  await assert.rejects(
+    () =>
+      startServer({
+        port,
+        env: { NODE_OPTIONS: '--definitely-invalid-node-option' }
+      }),
+    /App server failed to start on port/
+  );
+});
+
+test('TC-014: mock upstream returns 404 for unknown routes', async () => {
+  const upstreamPort = await findFreePort();
+  const upstream = await startMockUpstream(upstreamPort);
+
+  try {
+    const res = await fetch(`${upstream.baseUrl}/unknown`);
+    assert.equal(res.status, 404);
+    const body = await res.json();
+    assert.equal(body.error, 'Not found');
+  } finally {
+    await upstream.stop();
+  }
+});
+
+test('TC-015: parseUploadRows handles empty and non-header CSV input', () => {
+  const empty = parseUploadRows('\n   \n');
+  assert.deepEqual(empty, []);
+
+  const noHeader = parseUploadRows('prompt a,expected a\nprompt b,expected b');
+  assert.equal(noHeader.length, 2);
+  assert.deepEqual(noHeader[0], { input: 'prompt a', expected: 'expected a' });
+  assert.deepEqual(noHeader[1], { input: 'prompt b', expected: 'expected b' });
+});
+
+test('TC-016: parseUploadRows supports tab-delimited input with header removal', () => {
+  const tabText = 'Input\tExpected Output\nfoo\tbar\nhello\tworld';
+  const rows = parseUploadRows(tabText);
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows[0], { input: 'foo', expected: 'bar' });
+  assert.deepEqual(rows[1], { input: 'hello', expected: 'world' });
+});
