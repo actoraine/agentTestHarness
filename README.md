@@ -70,7 +70,18 @@ Optional auth:
 - `AGENT_AUTH_HEADER` (example: `Authorization`)
 - `AGENT_AUTH_TOKEN` (example: `Bearer ...`)
 
+Operational limits:
+- `REQUEST_TIMEOUT_MS` (optional, default `15000`): upstream request timeout in milliseconds.
+- `MAX_TEXT_LENGTH` (optional, default `20000`): max allowed length for `input`, `expected`, and `actual` payload fields.
+
 The app accepts common response shapes for run output (`output`, `result`, `response`, `text`, `answer`) and compare score (`score`, `similarity`, `percent`, `match`).
+
+## Security hardening
+- Express fingerprinting disabled (`x-powered-by` off).
+- Security headers enabled: `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
+- Upstream endpoint validation requires `http/https` URL format.
+- Auth header name is validated and disallowed hop-by-hop headers are blocked.
+- Upstream proxy calls use timeout + abort protection.
 
 ## Run locally
 ```bash
@@ -89,6 +100,10 @@ This runs major feature checks from:
 - `tests/run-tests.js`
 - `tests/TEST_CASES.md`
 - Includes a test that validates `sample-input.xls` parsing for upload.
+
+Latest measured coverage (`node --test --experimental-test-coverage tests/run-tests.js`):
+- Line coverage: `100.00%`
+- Branch coverage: `94.92%`
 
 ## macOS startup instructions
 1. Save these files in one folder (project root):
